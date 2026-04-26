@@ -1,7 +1,47 @@
 import secrets
+import math
 
 def generate_keys():
-    pass
+    while True:
+        p = generate_random_prime()
+        q = generate_random_prime()
+
+        while p == q:
+            q = generate_random_prime()
+
+        n = p * q # Este valor se comparte en ambas llaves
+
+        # Totiente de euler
+        tot = (p - 1) * (q - 1)
+
+        e = 65537
+
+        if (math.gcd(e, tot) != 1):
+            continue
+            
+        d = multiplicative_inverse(e, tot)
+
+        public_key = (n, e)
+        private_key = (n, d)
+
+        return public_key, private_key
+
+
+def multiplicative_inverse(e, tot):
+    gcd, x, _ = euclides(e, tot)
+    if gcd != 1:
+        raise ValueError("El inverso modular no existe")
+    else:
+        # Aseguramos que d sea positivo
+        return x % tot
+
+def euclides(a, b):
+    if a == 0:
+        return b, 0, 1
+    gcd, x1, y1 = euclides(b % a, a)
+    x = y1 - (b // a) * x1
+    y = x1
+    return gcd, x, y
 
 def is_prime(n):
     # Test de miller-rabin
@@ -50,5 +90,3 @@ def generate_random_prime():
             return num 
         
         #i = i + 1
-
-print(generate_random_prime())
