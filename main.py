@@ -3,27 +3,22 @@ from signature import sign, verify
 import hashlib
 
 # Es necesario transformar el mensaje a un entero < n para evitar
-# desbordamiento y garantizar que la operación modular sea válida.
+# desbordamiento y garantizar que la operación modular sea válida
 def prepare_message(message, n):
     # Para preparar el mensaje se necesita
     # 1. Validar que no sea in input vacío
     # 2. Convertir el mensaje a un hash usando SHA-256
     # 3. Convertir el hash a un entero
     # 4. Reducir el entero módulo n para asegurarnos de que el mensaje hash se ajuste al tamaño de la clave
-    # 5. Tiene que retornar el mensaje preparado como un entero
 
-    # 1
     if not isinstance(message, str):
         raise Exception("El mensaje debe ser una cadena de texto")
     if message == "":
         raise Exception("El mensaje no puede estar vacio")
 
-    # 2 y 3
-    hash_object = hashlib.sha256(message.encode("utf-8"))
-    hash_hex = hash_object.hexdigest()
-    message_int = int(hash_hex, 16)
+    hashed = hashlib.sha256(message.encode()).digest()
+    message_int = int.from_bytes(hashed)
 
-    # 4 y 5 - SHA256 hex -> int mod n
     return message_int % n
 
 def main():
@@ -43,6 +38,10 @@ def main():
         # Firmar el mensaje
         signature = sign(msg_int, private_key)
         print(f"\nFirma generada: {signature}")
+
+        # Check para modificar el mensaje
+        if (input("Quieres modificar el mensaje original? (Enter para omitir): ")):
+            msg_int = prepare_message(input("Introduce el mensaje modificado: "), n)
 
         # Verificar la firma
         is_valid = verify(msg_int, signature, public_key)
