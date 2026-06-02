@@ -36,6 +36,7 @@ def multiplicative_inverse(e, tot):
         return x % tot
 
 def euclides(a, b):
+    # ax + by = gcd(e, tot)
     if a == 0:
         return b, 0, 1
     gcd, x1, y1 = euclides(b % a, a)

@@ -1,50 +1,25 @@
-from keys import generate_keys
-from signature import sign, verify
-import hashlib
-
-# Es necesario transformar el mensaje a un entero < n para evitar
-# desbordamiento y garantizar que la operación modular sea válida
-def prepare_message(message, n):
-    # Para preparar el mensaje se necesita
-    # 1. Validar que no sea in input vacío
-    # 2. Convertir el mensaje a un hash usando SHA-256
-    # 3. Convertir el hash a un entero
-    # 4. Reducir el entero módulo n para asegurarnos de que el mensaje hash se ajuste al tamaño de la clave
-
-    if not isinstance(message, str):
-        raise Exception("El mensaje debe ser una cadena de texto")
-    if message == "":
-        raise Exception("El mensaje no puede estar vacio")
-
-    hashed = hashlib.sha256(message.encode()).digest()
-    message_int = int.from_bytes(hashed)
-
-    return message_int % n
+from user import User
 
 def main():
     try:
-        # Generar las claves
-        public_key, private_key = generate_keys()
-        n, _ = public_key
+        user = User()
 
         # Solicitar el mensaje al usuario
         message = input("Introduce el mensaje a firmar: ")
         if not message:
             raise Exception("El mensaje no puede estar vacio")
 
-        # Preparar el mensaje
-        msg_int = prepare_message(message, n)
-
         # Firmar el mensaje
-        signature = sign(msg_int, private_key)
+        signature = user.sign_message(message)
         print(f"\nFirma generada: {signature}")
 
         # Check para modificar el mensaje
-        if (input("Quieres modificar el mensaje original? (Enter para omitir): ")):
-            msg_int = prepare_message(input("Introduce el mensaje modificado: "), n)
+        modified = input("Quieres modificar el mensaje original? (Enter para omitir): ")
+        if modified:
+            message = input("Introduce el mensaje modificado: ")
 
         # Verificar la firma
-        is_valid = verify(msg_int, signature, public_key)
+        is_valid = user.verify_signature(message, signature)
         print(f"\nLa firma es valida?: {'Si' if is_valid else 'No'}")
 
     except Exception as e:

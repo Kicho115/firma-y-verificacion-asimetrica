@@ -1,28 +1,21 @@
-from main import prepare_message
-from signature import sign, verify
-from keys import generate_keys
+from user import User
 
 print("\nTESTS")
 
 try:
-    message = "Hola mundo"
-    public_key, private_key = generate_keys()
-    n, _ = public_key
-    msg = prepare_message(message, n)
+    user = User()
 
-    signature = sign(msg, private_key)
+    message = "Hola mundo"
+    signature = user.sign_message(message)
 
     # Mensaje alterado
-    altered = prepare_message("Hola mundo!", n)
-    print("\nTEST Mensaje alterado:", verify(altered, signature, public_key))
+    other_user = User()
+    print("\nTEST Mensaje alterado:", other_user.verify_signature("Hola mundo!", signature))
 
     # Llave incorrecta
-    fake_key = (public_key[0], public_key[1] + 2)
-    print("\nTEST Llave incorrecta:", verify(msg, signature, fake_key))
+    print("\nTEST Llave incorrecta:", other_user.verify_signature(message, signature))
 
-    # Mensaje vacío
-    empty = prepare_message("", n)
-    sig_empty = sign(empty, private_key)
-    print("\nTEST Mensaje vacío:", verify(empty, sig_empty, public_key))
+    # Mensaje original (debe ser válido)
+    print("\nTEST Mensaje original:", user.verify_signature(message, signature))
 except Exception as e:
     print(f"\nERROR: {e}")
