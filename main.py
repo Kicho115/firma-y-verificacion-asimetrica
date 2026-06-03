@@ -1,30 +1,71 @@
 from user import User
 from message import Message
 
+
 def main():
     try:
-        user = User()
+        # Crear a Alice y Bob con sus pares de llaves RSA
+        alice = User("Alice")
+        bob = User("Bob")
+        print("Llaves generadas.\n")
 
-        # Solicitar el mensaje al usuario
-        content = input("Introduce el mensaje a firmar: ")
+        # Alice escribe el mensaje para Bob
+        content = input("Escribir el mensaje para Bob: ").strip()
+
         if not content:
-            raise Exception("El mensaje no puede estar vacio")
+            print("Error: el mensaje no puede estar vacío.")
+            return
 
-        # Crear el mensaje (se firma automáticamente)
-        msg = Message(content, user)
-        print(f"\nFirma generada: {msg.signature}")
+        # Alice crea el mensaje
+        msg = Message(
+            content,
+            sender=alice,
+            receiver=bob
+        )
 
-        # Check para modificar el mensaje (simula una alteración del contenido original)
-        modified = input("Quieres modificar el mensaje original? (Enter para omitir): ")
-        if modified:
-            msg.content = input("Introduce el mensaje modificado: ")
+        # Serializar a JSON
+        json_payload = msg.to_json()
 
-        # Verificar la firma
-        is_valid = msg.verify()
-        print(f"\nLa firma es valida?: {'Si' if is_valid else 'No'}")
+        print("\nPayload JSON")
+        print(json_payload)
+
+        # Reconstruir mensaje desde JSON
+        try:
+            received = Message.from_json(json_payload)
+
+        except ValueError as e:
+            print(f"Error al procesar el JSON: {e}")
+            return
+
+        # Simular modificación del contenido cifrado
+        modif = input(
+            "\n¿Simular alteración del mensaje en tránsito? (s/n): "
+        ).strip().lower()
+
+        if modif == "s":
+            tampered = bytearray(received.encrypted_content)
+
+            if len(tampered) > 0:
+                tampered[0] ^= 0xFF
+
+            received.encrypted_content = bytes(tampered)
+
+            print(
+                "(Atacante: primer byte del contenido cifrado modificado)\n"
+            )
+
+        # Bob recibe, descifra y verifica
+        received.receive(bob)
+
+    except KeyboardInterrupt:
+        print("\nOperación cancelada por el usuario.")
 
     except Exception as e:
-        print(f"Error en el sistema: {e}")
+        print(
+            f"\nSe produjo un error inesperado: "
+            f"{type(e).__name__}: {e}"
+        )
+
 
 if __name__ == "__main__":
     main()
