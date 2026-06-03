@@ -1,15 +1,17 @@
 from keys import generate_keys
-from signature import sign, verify
+from signature import sign, verify, rsa_encrypt, rsa_decrypt
 import hashlib
 
 
 class User:
-    def __init__(self):
+    def __init__(self, name="Usuario"):
+        self.name = name
         public_key, private_key = generate_keys()
         self.public_key = public_key
         self.private_key = private_key
 
-    def prepare_message(self, message):
+    @staticmethod
+    def prepare_message(message, public_key):
         # Es necesario transformar el mensaje a un entero < n para evitar
         # desbordamiento y garantizar que la operación modular sea válida
         # Para preparar el mensaje se necesita
@@ -26,19 +28,32 @@ class User:
         hashed = hashlib.sha256(message.encode()).digest()
         message_int = int.from_bytes(hashed)
 
-        n, _ = self.public_key
+        n, _ = public_key
         return message_int % n
 
     def sign_message(self, message):
-        # Firmar el mensaje usando la llave privada
-
-        msg_int = self.prepare_message(message)
+        # Firmar un mensaje usando la llave privada
+        msg_int = self.prepare_message(message, self.public_key)
         signature = sign(msg_int, self.private_key)
         return signature
 
-    def verify_signature(self, message, signature):
+    @staticmethod
+    def verify_signature(message, signature, public_key):
         # Verificar la firma de un mensaje usando la llave pública
         # Compara el hash recuperado con el hash del mensaje original
 
-        msg_int = self.prepare_message(message)
-        return verify(msg_int, signature, self.public_key)
+        msg_int = User.prepare_message(message, public_key)
+        return verify(msg_int, signature, public_key)
+
+    def rsa_encrypt(self, data, target_pubkey):
+        return rsa_encrypt(data, target_pubkey)
+
+    def rsa_decrypt(self, data):
+        return rsa_decrypt(data, self.private_key)
+
+    def get_public_key_dict(self):
+        n, e = self.public_key
+        return {
+            "n": str(n),
+            "e": str(e)
+        }
