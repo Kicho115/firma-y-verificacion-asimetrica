@@ -4,11 +4,15 @@ import hashlib
 
 
 class User:
-    def __init__(self, name="Usuario"):
+    def __init__(self, name="Usuario", public_key=None, private_key=None):
         self.name = name
-        public_key, private_key = generate_keys()
-        self.public_key = public_key
-        self.private_key = private_key
+        if public_key is not None and private_key is not None:
+            self.public_key = public_key
+            self.private_key = private_key
+        else:
+            public_key, private_key = generate_keys()
+            self.public_key = public_key
+            self.private_key = private_key
 
     @staticmethod
     def prepare_message(message, public_key):
