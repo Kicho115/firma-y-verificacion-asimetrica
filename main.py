@@ -1,35 +1,27 @@
+import os
 from user import User
 from message import Message
 
 
 def main():
     try:
-        # Crear a Alice y Bob con sus pares de llaves RSA
         alice = User("Alice")
         bob = User("Bob")
         print("Llaves generadas.\n")
 
-        # Alice escribe el mensaje para Bob
         content = input("Escribir el mensaje para Bob: ").strip()
 
         if not content:
             print("Error: el mensaje no puede estar vacío.")
             return
 
-        # Alice crea el mensaje
-        msg = Message(
-            content,
-            sender=alice,
-            receiver=bob
-        )
+        msg = Message(content, sender=alice, receiver=bob)
 
-        # Serializar a JSON
         json_payload = msg.to_json()
 
         print("\nPayload JSON")
         print(json_payload)
 
-        # Reconstruir mensaje desde JSON
         try:
             received = Message.from_json(json_payload)
 
@@ -37,7 +29,6 @@ def main():
             print(f"Error al procesar el JSON: {e}")
             return
 
-        # Simular modificación del contenido cifrado
         modif = input(
             "\n¿Simular alteración del mensaje en tránsito? (s/n): "
         ).strip().lower()
@@ -54,8 +45,13 @@ def main():
                 "(Atacante: primer byte del contenido cifrado modificado)\n"
             )
 
-        # Bob recibe, descifra y verifica
         received.receive(bob)
+
+        os.makedirs("jsons", exist_ok=True)
+        filename = "jsons/tampered.json" if modif == "s" else "jsons/valid.json"
+        with open(filename, "w") as f:
+            f.write(received.to_json())
+        print(f"\nJSON guardado en {filename}")
 
     except KeyboardInterrupt:
         print("\nOperación cancelada por el usuario.")
